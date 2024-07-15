@@ -1,0 +1,69 @@
+{
+  "name": "@techmely/domain-driven",
+  "version": "1.1.4",
+  "description": "Techmely Domain Driven",
+  "author": "Harry Tran <nhattq.coding@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://techmely.com/libraries/domain-driven",
+  "bugs": {
+    "url": "https://github.com/techmely/domain-driven/issues"
+  },
+  "repository": {
+    "url": "git+https://github.com/techmely/domain-driven.git#main"
+  },
+  "main": "index.cjs",
+  "module": "index.mjs",
+  "types": "index.d.ts",
+  "publishConfig": {
+    "access": "public",
+    "directory": "dist",
+    "tag": "latest"
+  },
+  "scripts": {
+    "lint.format": "bunx @biomejs/biome check --write .",
+    "clean": "rm -f dist node_modules",
+    "test.unit": "vitest --passWithNoTests",
+    "test.unit.run": "NODE_ENV=test vitest run --passWithNoTests --isolate",
+    "test.unit.coverage": "vitest --coverage",
+    "build": "cross-env NODE_ENV=production bun run ./build.ts",
+    "release": "bun run ./release.ts",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@techmely/utils": "^3.3.0",
+    "base-x": "^5.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.8.3",
+    "@changesets/changelog-github": "0.5.0",
+    "@changesets/cli": "2.27.7",
+    "@techmely/http": "1.2.12",
+    "@techmely/types": "1.9.0",
+    "@types/bun": "1.1.6",
+    "@types/node": "20.14.10",
+    "@vitest/coverage-v8": "1.6.0",
+    "cross-env": "7.0.3",
+    "happy-dom": "14.12.3",
+    "husky": "9.0.11",
+    "npm-check-updates": "16.14.20",
+    "tslib": "2.6.3",
+    "typescript": "5.5.3",
+    "vite": "^5.3.3",
+    "vitest": "2.0.2",
+    "zx": "8.1.4"
+  },
+  "funding": [
+    {
+      "type": "ko-fi",
+      "url": "https://ko-fi.com/harrytran998"
+    },
+    {
+      "type": "patreon",
+      "url": "https://www.patreon.com/harrytran998"
+    }
+  ],
+  "keywords": [
+    "techmely",
+    "domain driven design"
+  ]
+}
