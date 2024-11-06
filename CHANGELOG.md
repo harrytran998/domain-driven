@@ -1,5 +1,14 @@
 # @techmely/domain-driven
 
+## 2.0.0
+
+### Major Changes
+
+- Breaking change: remove unnecessary concepts for simple ddd
+  - Remove Value Object
+  - Remove validation props in Aggregate, Entity
+  - Remove `toResponse` in mapper
+
 ## 1.1.5
 
 ### Patch Changes
