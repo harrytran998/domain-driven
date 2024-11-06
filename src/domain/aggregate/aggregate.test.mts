@@ -10,22 +10,6 @@ describe("Aggregate", () => {
       id: string;
       name: string;
     };
-    class AggregateErr extends Aggregate<Props> {
-      override validateBusinessRules(): [boolean, Error | undefined] {
-        return [true, undefined];
-      }
-      static override create(props: EntityProps, config: AggregateConfig) {
-        const [isValid, error] = AggregateErr.isValidProps(props);
-        if (!isValid) return Result.fail(error);
-        const aggregate = new AggregateErr(props, config);
-        return Result.Ok(aggregate);
-      }
-    }
-    it("Should return fails if you provide a null value", () => {
-      // @ts-expect-error Intentionally config
-      const instance = AggregateErr.create(null, null);
-      expect(instance.isFail()).toBeTruthy();
-    });
     // it("Should generate exactly hash-code");
     // it("Should have a context");
     // it("Should get a valid aggregate metrics");

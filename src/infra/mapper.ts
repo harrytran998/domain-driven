@@ -5,9 +5,9 @@ export interface DomainMapper<
   Props extends EntityProps,
   DbRecord,
   DomainEntity extends Entity<Props>,
-  Response = unknown,
+  // Response = unknown,
 > {
   toPersistence(entity: DomainEntity): DbRecord;
   toDomain(record: DbRecord): DomainEntity;
-  toResponse(entity: DomainEntity): Response;
+  // toResponse(entity: DomainEntity): Response;
 }

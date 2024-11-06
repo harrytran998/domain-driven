@@ -14,8 +14,7 @@ export type EntityConfig = {
   debug: boolean;
 };
 
-export interface EntityPort<Props> {
-  get id(): UniqueEntityID | EntityId;
+export interface EntityPort<Props, ToObject = Records> {
   /**
    * @description Get hash to identify the entity.
    * @example
@@ -25,9 +24,9 @@ export interface EntityPort<Props> {
   /**
    * @description Get a new instanced based on current Entity.
    */
-  clone(): EntityPort<Props>;
+  clone(): EntityPort<Props, ToObject>;
   /**
    * @description Get value as object from entity.
    */
-  toObject(): Records;
+  toObject(): ToObject;
 }
