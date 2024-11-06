@@ -31,7 +31,6 @@ describe("Value Object", () => {
     interface Props {
       value: string;
     }
-    // biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
     class GenericVo extends ValueObject<Props> {
       static override isValidProps(): boolean {
         return true;
@@ -121,21 +120,6 @@ describe("Value Object", () => {
   });
 
   describe("native validation", () => {
-    interface Props {
-      value: string;
-      age: number;
-    }
-
-    class StringVo extends ValueObject<Props> {
-      private constructor(props: Props) {
-        super(props);
-      }
-
-      static override create(props: Props): IResult<StringVo> {
-        return Result.Ok(new StringVo(props));
-      }
-    }
-
     it("should transform value object to object", () => {
       class Sample extends ValueObject<{ value: string }> {
         private constructor(props: { value: string }) {
@@ -163,7 +147,10 @@ describe("Value Object", () => {
         }
       }
 
-      const result = Obj.create({ value: sample.value(), other: "Other Sample" });
+      const result = Obj.create({
+        value: sample.value(),
+        other: "Other Sample",
+      });
 
       expect(result.value().raw()).toEqual({
         value: { value: "Sample", foo: "bar" },
@@ -212,7 +199,6 @@ describe("Value Object", () => {
     interface Props {
       value: string;
     }
-    // biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
     class Simple extends ValueObject<Props> {
       static override create(props: Props): IResult<Simple> {
         return Result.Ok(new Simple(props));

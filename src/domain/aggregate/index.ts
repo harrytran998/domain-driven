@@ -1,3 +1,4 @@
+import { invariant } from "@techmely/utils";
 import { Result } from "../../utils";
 import type { IResult } from "../../utils/result/types";
 import { createEventContext } from "../context";
@@ -49,9 +50,8 @@ export class Aggregate<Props extends EntityProps>
    * @summary result state will be `null` case failure.
    */
   static override create(props: EntityProps, config: AggregateConfig): Result<any, any, any> {
-    if (!Aggregate.isValidProps(props))
-      return Result.fail(`Invalid props to create an instance of ${Aggregate.name}`);
-    return Result.Ok(new Aggregate(props, config));
+    if (Aggregate.isValidProps(props)) return Result.Ok(new Aggregate(props, config));
+    return Result.fail(`Invalid props to create an instance of ${Aggregate.name}`);
   }
 
   /**
@@ -80,7 +80,7 @@ export class Aggregate<Props extends EntityProps>
     const _props = props ? { ...this.#props, ...props } : this.#props;
     const events = props && !!props.copyEvents ? this.#domainEvents : null;
     const instance = Reflect.getPrototypeOf(this);
-    if (!instance) throw new Error("Cannot get prototype of this entity instance");
+    invariant(instance, "Cannot get prototype of this entity instance");
     const aggregate = Reflect.construct(instance.constructor, [
       _props,
       this.#aggregateConfig,

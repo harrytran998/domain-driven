@@ -24,9 +24,8 @@
     "skipLibCheck": true,
     "removeComments": true,
     "forceConsistentCasingInFileNames": true,
-    "verbatimModuleSyntax": true,
-    "jsx": "react-jsx",
-    "types": ["vite/client"]
+    "verbatimModuleSyntax": true
   },
-  "include": ["src/**/*", "tests/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["src/**/*.test.mts"]
 }

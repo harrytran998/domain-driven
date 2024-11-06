@@ -3,8 +3,8 @@ import type { UniqueEntityID } from "./unique-entity";
 
 export interface BaseEntityProps {
   id: UniqueEntityID | EntityId;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface EntityProps extends Partial<BaseEntityProps>, Record<string, any> {}

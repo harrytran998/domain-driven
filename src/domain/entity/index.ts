@@ -1,8 +1,13 @@
 import type { EntityId, Records } from "@techmely/types";
-import { isEmpty } from "@techmely/utils";
+import { invariant, isEmpty } from "@techmely/utils";
 import { Result } from "../../utils";
 import type { IResult } from "../../utils/result/types";
-import type { BaseEntityProps, EntityConfig, EntityPort, EntityProps } from "./types";
+import type {
+  BaseEntityProps,
+  EntityConfig,
+  EntityPort,
+  EntityProps,
+} from "./types";
 import { UniqueEntityID } from "./unique-entity";
 
 const BASE_MAX_PROPS = 32;
@@ -13,8 +18,8 @@ const defaultEntityConfig: EntityConfig = {
 
 class Entity<Props extends EntityProps> implements EntityPort<Props> {
   readonly #id: UniqueEntityID | EntityId;
-  readonly #createdAt: Date;
-  readonly #updatedAt: Date;
+  readonly #createdAt: string;
+  readonly #updatedAt: string;
   readonly #props: Props;
   readonly #config: EntityConfig;
 
@@ -24,8 +29,8 @@ class Entity<Props extends EntityProps> implements EntityPort<Props> {
     const { id, createdAt, updatedAt, ...props } = request;
     this.#id = id || UniqueEntityID.create();
     const now = new Date();
-    this.#createdAt = createdAt || now;
-    this.#updatedAt = updatedAt || now;
+    this.#createdAt = createdAt || now.toISOString();
+    this.#updatedAt = updatedAt || now.toISOString();
     this.#props = props as any;
     this.#config = config || defaultEntityConfig;
   }
@@ -36,7 +41,7 @@ class Entity<Props extends EntityProps> implements EntityPort<Props> {
 
   static isValidProps(
     props: unknown,
-    config: EntityConfig = defaultEntityConfig,
+    config: EntityConfig = defaultEntityConfig
   ): [boolean, Error | undefined] {
     if (isEmpty(props)) {
       if (config.debug) console.error("Entity props should not be empty");
@@ -54,7 +59,10 @@ class Entity<Props extends EntityProps> implements EntityPort<Props> {
     return [true, undefined];
   }
 
-  public static create(props: EntityProps, config?: EntityConfig): IResult<any, any, any>;
+  public static create(
+    props: EntityProps,
+    config?: EntityConfig
+  ): IResult<any, any, any>;
   /**
    *
    * @param props params as Props
@@ -62,15 +70,23 @@ class Entity<Props extends EntityProps> implements EntityPort<Props> {
    * @returns instance of result with a new Entity on state if success.
    * @summary result state will be `null` case failure.
    */
-  public static create(props: EntityProps, config?: EntityConfig): Result<any, any, any> {
+  public static create(
+    props: EntityProps,
+    config?: EntityConfig
+  ): Result<any, any, any> {
     const [_, err] = Entity.isValidProps(props);
     if (err)
-      return Result.fail(`Invalid props to create an instance of ${Entity.name}: `, err?.message);
+      return Result.fail(
+        `Invalid props to create an instance of ${Entity.name}: `,
+        err?.message
+      );
     try {
       const entity = new Entity(props, config);
       return Result.Ok(entity);
     } catch (err) {
-      return Result.fail(`Invalid business rules(instance of ${Entity.name}: ${err}`);
+      return Result.fail(
+        `Invalid business rules(instance of ${Entity.name}: ${err}`
+      );
     }
   }
 
@@ -78,11 +94,11 @@ class Entity<Props extends EntityProps> implements EntityPort<Props> {
     return this.#id;
   }
 
-  get createdAt(): Date {
+  get createdAt(): string {
     return this.#createdAt;
   }
 
-  get updatedAt(): Date {
+  get updatedAt(): string {
     return this.#updatedAt;
   }
 
@@ -101,7 +117,9 @@ class Entity<Props extends EntityProps> implements EntityPort<Props> {
    */
   hashCode(): UniqueEntityID {
     const instance = Reflect.getPrototypeOf(this);
-    return new UniqueEntityID(`[Entity@${instance?.constructor?.name}]:${this.#id}`);
+    return new UniqueEntityID(
+      `[Entity@${instance?.constructor?.name}]:${this.#id}`
+    );
   }
 
   /**
@@ -113,8 +131,11 @@ class Entity<Props extends EntityProps> implements EntityPort<Props> {
   clone(props?: Partial<Props>): this {
     const _props = props ? { ...this.#props, ...props } : this.#props;
     const instance = Reflect.getPrototypeOf(this);
-    if (!instance) throw new Error("Cannot get prototype of this entity instance");
-    const entity = Reflect.construct(instance.constructor, [_props, this.#config]);
+    invariant(instance, "Cannot get prototype of this entity instance");
+    const entity = Reflect.construct(instance.constructor, [
+      _props,
+      this.#config,
+    ]);
     return entity;
   }
 
