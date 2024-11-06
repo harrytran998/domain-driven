@@ -11,7 +11,7 @@
   "repository": {
     "url": "git+https://github.com/techmely/domain-driven.git#main"
   },
-  "main": "index.cjs",
+  "main": "index.js",
   "module": "index.mjs",
   "types": "index.d.ts",
   "publishConfig": {
@@ -20,37 +20,38 @@
     "tag": "latest"
   },
   "scripts": {
-    "lint.format": "bunx @biomejs/biome check --write .",
+    "lint.format": "biome check --write .",
     "clean": "rm -f dist node_modules",
     "test.unit": "vitest --passWithNoTests",
     "test.unit.run": "NODE_ENV=test vitest run --passWithNoTests --isolate",
     "test.unit.coverage": "vitest --coverage",
     "build": "cross-env NODE_ENV=production bun run ./build.ts",
     "release": "bun run ./release.ts",
-    "prepare": "husky"
+    "prepare": "husky",
+    "upgrade.deps": "npm-check-updates --dep dev,prod,peer -u"
   },
   "dependencies": {
     "@techmely/utils": "^3.3.0",
     "base-x": "^5.0.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.8.3",
+    "@biomejs/biome": "1.9.4",
     "@changesets/changelog-github": "0.5.0",
-    "@changesets/cli": "2.27.7",
+    "@changesets/cli": "2.27.9",
     "@techmely/http": "1.2.12",
     "@techmely/types": "1.9.0",
-    "@types/bun": "1.1.6",
-    "@types/node": "20.14.10",
-    "@vitest/coverage-v8": "1.6.0",
+    "@types/bun": "1.1.13",
+    "@types/node": "22.9.0",
+    "@vitest/coverage-v8": "2.1.4",
     "cross-env": "7.0.3",
-    "happy-dom": "14.12.3",
-    "husky": "9.0.11",
-    "npm-check-updates": "16.14.20",
-    "tslib": "2.6.3",
-    "typescript": "5.5.3",
-    "vite": "^5.3.3",
-    "vitest": "2.0.2",
-    "zx": "8.1.4"
+    "happy-dom": "15.10.0",
+    "husky": "9.1.6",
+    "npm-check-updates": "^17.1.10",
+    "tslib": "2.8.1",
+    "typescript": "5.6.3",
+    "vite": "^5.4.10",
+    "vitest": "2.1.4",
+    "zx": "8.2.0"
   },
   "funding": [
     {
