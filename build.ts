@@ -1,6 +1,6 @@
 import { execSync } from "node:child_process";
-import json from "./package.json";
 import type { BuildConfig } from "bun";
+import json from "./package.json";
 
 execSync("rm -rf dist");
 
@@ -21,10 +21,7 @@ const buildConfig: BuildConfig = {
   outdir: "dist",
   format: "cjs",
   target: "node",
-  external: [
-    ...Object.keys(json.dependencies),
-    ...Object.keys(json.devDependencies),
-  ],
+  external: [...Object.keys(json.dependencies), ...Object.keys(json.devDependencies)],
 };
 
 await Bun.build({
