@@ -12,7 +12,6 @@ const buildConfig: BuildConfig = {
     "src/domain/entity/index.ts",
     "src/domain/entity/unique-entity.ts",
     "src/domain/events/index.ts",
-    "src/domain/value-object/index.ts",
     "src/domain/repository.ts",
     "src/domain/use-cases-port.ts",
     "src/infra/index.ts",
