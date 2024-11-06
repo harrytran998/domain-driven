@@ -1,5 +1,11 @@
 # @techmely/domain-driven
 
+## 1.1.5
+
+### Patch Changes
+
+- Upgrade dependencies + fix build lib
+
 ## 1.1.4
 
 ### Patch Changes
