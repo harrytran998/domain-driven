@@ -1,4 +1,4 @@
-import type EventEmitter from "node:events";
+import type EventEmitter from "emittery";
 import { BrowserEventManager } from "./browser.event";
 import { ServerEventManager } from "./server.event";
 import type { EventContextManager } from "./types";

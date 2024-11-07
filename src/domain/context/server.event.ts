@@ -1,4 +1,4 @@
-import type { EventEmitter } from "node:events";
+import type EventEmitter from "emittery";
 import { WILDCARD_EVENT_ALIAS, validateContextEventName } from "./context.utils";
 import type { ContextEventName, EventContextManager, EventPort, EventType } from "./types";
 
@@ -25,7 +25,7 @@ export class ServerEventManager implements EventContextManager {
     validateContextEventName(name);
     if (this.exists(name)) return;
     this.#events.push({ name, callback: fn });
-    this.#emitter.addListener(name, fn);
+    this.#emitter.on(name, fn);
   }
 
   exists(name: ContextEventName): boolean {
@@ -40,7 +40,7 @@ export class ServerEventManager implements EventContextManager {
     if (!event) return false;
 
     this.#events = this.#events.filter((event): boolean => event.name !== name);
-    this.#emitter.removeListener(name, event.callback);
+    this.#emitter.off(name, event.callback);
     return true;
   }
 

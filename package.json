@@ -32,7 +32,8 @@
   },
   "dependencies": {
     "@techmely/utils": "^3.3.0",
-    "base-x": "^5.0.0"
+    "base-x": "^5.0.0",
+    "emittery": "^1.0.3"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
@@ -63,8 +64,5 @@
       "url": "https://www.patreon.com/harrytran998"
     }
   ],
-  "keywords": [
-    "techmely",
-    "domain driven design"
-  ]
+  "keywords": ["techmely", "domain driven design"]
 }

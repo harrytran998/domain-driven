@@ -1,4 +1,5 @@
 import { invariant } from "@techmely/utils";
+import Emittery from "emittery";
 import { Result } from "../../utils";
 import type { IResult } from "../../utils/result/types";
 import { createEventContext } from "../context";
@@ -31,20 +32,17 @@ export class Aggregate<Props extends EntityProps>
   constructor(
     props: EntityProps,
     config?: AggregateConfig,
-    events?: DomainEvents<Aggregate<Props>>
+    events?: DomainEvents<Aggregate<Props>>,
   ) {
     super(props, config);
     this.#props = props;
     this.#dispatchEventsCount = 0;
-    this.#aggregateConfig = config;
+    this.#aggregateConfig = config ?? { emitter: new Emittery(), debug: false };
     this.#domainEvents = new DomainEvents(this);
     if (events) this.#domainEvents = events as unknown as DomainEvents<this>;
   }
 
-  static override create(
-    props: any,
-    config: AggregateConfig
-  ): IResult<any, any, any>;
+  static override create(props: any, config?: AggregateConfig): IResult<any, any, any>;
   /**
    *
    * @param props params as Props
@@ -52,10 +50,7 @@ export class Aggregate<Props extends EntityProps>
    * @returns instance of result with a new Aggregate on state if success.
    * @summary result state will be `null` case failure.
    */
-  static override create(
-    props: EntityProps,
-    config: AggregateConfig
-  ): Result<any, any, any> {
+  static override create(props: EntityProps, config?: AggregateConfig): Result<any, any, any> {
     return Result.Ok(new Aggregate(props, config));
   }
 
@@ -68,8 +63,7 @@ export class Aggregate<Props extends EntityProps>
   get eventMetrics(): DomainEventMetrics {
     return {
       current: this.#domainEvents.metrics.totalEvents(),
-      total:
-        this.#domainEvents.metrics.totalEvents() + this.#dispatchEventsCount,
+      total: this.#domainEvents.metrics.totalEvents() + this.#dispatchEventsCount,
       dispatch: this.#dispatchEventsCount,
     };
   }
@@ -79,9 +73,7 @@ export class Aggregate<Props extends EntityProps>
    */
   override hashCode(): UniqueEntityID {
     const instance = Reflect.getPrototypeOf(this);
-    return new UniqueEntityID(
-      `[Aggregate@${instance?.constructor.name}]:${this.#props.id}`
-    );
+    return new UniqueEntityID(`[Aggregate@${instance?.constructor.name}]:${this.#props.id}`);
   }
 
   override clone(props?: Partial<Props> & { copyEvents?: boolean }): this {
@@ -112,9 +104,7 @@ export class Aggregate<Props extends EntityProps>
     this.#dispatchEventsCount += totalEvents;
   }
 
-  clearEvents(
-    config: AggregateClearEventsConfig = { resetMetrics: false }
-  ): void {
+  clearEvents(config: AggregateClearEventsConfig = { resetMetrics: false }): void {
     if (config.resetMetrics) this.#dispatchEventsCount = 0;
     this.#domainEvents.clear();
   }
@@ -123,25 +113,23 @@ export class Aggregate<Props extends EntityProps>
   addEvent(
     name: string,
     handler: DomainEventHandler<this>,
-    options?: DomainEventOptions | undefined
+    options?: DomainEventOptions | undefined,
   ): void;
   addEvent(
     nameOrEvent: string | AggregateEventHandler<this>,
     handler: DomainEventHandler<this>,
-    options?: DomainEventOptions | undefined
+    options?: DomainEventOptions | undefined,
   ): void;
   addEvent(
     nameOrEvent: unknown,
     handler?: DomainEventHandler<this>,
-    options?: DomainEventOptions
+    options?: DomainEventOptions,
   ): void {
     if (typeof nameOrEvent === "string" && handler) {
       this.#domainEvents.add(nameOrEvent as ContextEventName, handler, options);
     }
-    const _options = (nameOrEvent as AggregateEventHandler<this>)?.params
-      ?.options;
-    const eventName = (nameOrEvent as AggregateEventHandler<this>)?.params
-      ?.name;
+    const _options = (nameOrEvent as AggregateEventHandler<this>)?.params?.options;
+    const eventName = (nameOrEvent as AggregateEventHandler<this>)?.params?.name;
     const eventHandler = (nameOrEvent as AggregateEventHandler<this>)?.dispatch;
     this.#domainEvents.add(eventName, eventHandler, _options);
   }

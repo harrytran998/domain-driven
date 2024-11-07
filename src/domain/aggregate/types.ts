@@ -1,4 +1,4 @@
-import type EventEmitter from "node:events";
+import type Emittery from "emittery";
 import type { ContextEventName, EventContextManager } from "../context/types";
 import type { EntityConfig } from "../entity/types";
 import type { UniqueEntityID } from "../entity/unique-entity";
@@ -9,7 +9,7 @@ import type {
 } from "../events/types";
 
 export type AggregateConfig = {
-  emitter: EventEmitter;
+  emitter: Emittery;
 } & EntityConfig;
 
 export type AggregateClearEventsConfig = {

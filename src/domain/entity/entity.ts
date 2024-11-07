@@ -5,9 +5,7 @@ import type { IResult } from "../../utils/result/types";
 import type { EntityConfig, EntityPort, EntityProps } from "./types";
 import { UniqueEntityID } from "./unique-entity";
 
-const BASE_MAX_PROPS = 32;
 const defaultEntityConfig: EntityConfig = {
-  maxProps: BASE_MAX_PROPS,
   debug: Boolean(process.env.DEBUG) || false,
 };
 
