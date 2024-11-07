@@ -1,5 +1,11 @@
 # @techmely/domain-driven
 
+## 2.1.0
+
+### Minor Changes
+
+- Add emittery for default aggregate config
+
 ## 2.0.0
 
 ### Major Changes
