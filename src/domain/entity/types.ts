@@ -7,11 +7,20 @@ export interface BaseEntityProps {
   updatedAt: string;
 }
 
-export interface EntityProps extends Partial<BaseEntityProps>, Record<string, any> {}
+export interface EntityProps
+  extends Partial<BaseEntityProps>,
+    Record<string, any> {}
 
 export type EntityConfig = {
-  maxProps: number;
-  debug: boolean;
+  /**
+   * @description Max number of properties allowed for entity.
+   * @default 50
+   */
+  maxProps?: number;
+  /** @description Enable debug mode for entity.
+   * @default false
+   */
+  debug?: boolean;
 };
 
 export interface EntityPort<Props, ToObject = Records> {
