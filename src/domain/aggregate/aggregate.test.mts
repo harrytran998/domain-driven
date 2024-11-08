@@ -1,21 +1,34 @@
-import { describe, expect, it } from "vitest";
+import type { EntityId } from "@techmely/types";
+import { describe, expect } from "vitest";
 import { Aggregate } from ".";
-import { Result } from "../../utils";
-import type { EntityProps } from "../entity/types";
-import type { AggregateConfig } from "./types";
 
 describe("Aggregate", () => {
   describe("Aggregate basic", () => {
     type Props = {
-      id: string;
+      id: EntityId;
       name: string;
+      age: number;
     };
-    // it("Should generate exactly hash-code");
-    // it("Should have a context");
-    // it("Should get a valid aggregate metrics");
-    // it("Should clone another instance");
+
+    const User = Aggregate.create<Props>({ id: 1, name: "John", age: 20 });
+    const value = User.value();
+    const { createdAt, updatedAt, ...rest } = value.toObject();
+    expect(rest).toStrictEqual({ id: 1, name: "John", age: 20 });
   });
-  // describe("Aggregate with value object");
+
+  describe("Aggregate with no id", () => {
+    type Props = {
+      name: string;
+      age: number;
+    };
+
+    const User = Aggregate.create<Props>({ name: "John", age: 20 });
+    const value = User.value();
+    const { createdAt, updatedAt, id, ...rest } = value.toObject();
+    expect(id.toString().startsWith("ett")).toBe(true);
+    expect(rest).toStrictEqual({ name: "John", age: 20 });
+  });
+
   // describe("Aggregate with updated/created at");
   // describe("Aggregate with domain id");
   // describe("Aggregate events", () => {

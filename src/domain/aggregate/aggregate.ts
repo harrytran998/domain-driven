@@ -20,19 +20,16 @@ import type {
   DomainEventMetrics,
 } from "./types";
 
-export class Aggregate<Props extends EntityProps>
-  extends Entity<Props>
-  implements AggregatePort<Props>
-{
+export class Aggregate<T> extends Entity<EntityProps<T>> implements AggregatePort<EntityProps<T>> {
   readonly #domainEvents: DomainEvents<this>;
   #dispatchEventsCount: number;
   readonly #aggregateConfig: AggregateConfig;
-  readonly #props: EntityProps;
+  readonly #props: EntityProps<T>;
 
   constructor(
-    props: EntityProps,
+    props: EntityProps<T>,
     config?: AggregateConfig,
-    events?: DomainEvents<Aggregate<Props>>,
+    events?: DomainEvents<Aggregate<T>>,
   ) {
     super(props, config);
     this.#props = props;
@@ -42,7 +39,6 @@ export class Aggregate<Props extends EntityProps>
     if (events) this.#domainEvents = events as unknown as DomainEvents<this>;
   }
 
-  static override create(props: any, config?: AggregateConfig): IResult<any, any, any>;
   /**
    *
    * @param props params as Props
@@ -50,7 +46,10 @@ export class Aggregate<Props extends EntityProps>
    * @returns instance of result with a new Aggregate on state if success.
    * @summary result state will be `null` case failure.
    */
-  static override create(props: EntityProps, config?: AggregateConfig): Result<any, any, any> {
+  static override create<T>(
+    props: Partial<EntityProps<T>>,
+    config?: AggregateConfig,
+  ): Result<Aggregate<T>, any, any> {
     return Result.Ok(new Aggregate(props, config));
   }
 
@@ -76,7 +75,7 @@ export class Aggregate<Props extends EntityProps>
     return new UniqueEntityID(`[Aggregate@${instance?.constructor.name}]:${this.#props.id}`);
   }
 
-  override clone(props?: Partial<Props> & { copyEvents?: boolean }): this {
+  override clone(props?: Partial<EntityProps<T>> & { copyEvents?: boolean }): this {
     const _props = props ? { ...this.#props, ...props } : this.#props;
     const events = props && !!props.copyEvents ? this.#domainEvents : null;
     const instance = Reflect.getPrototypeOf(this);

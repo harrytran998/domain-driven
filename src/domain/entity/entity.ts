@@ -1,4 +1,4 @@
-import type { Records } from "@techmely/types";
+import type { MarkRequired } from "@techmely/types";
 import { invariant } from "@techmely/utils";
 import { Result } from "../../utils";
 import type { IResult } from "../../utils/result/types";
@@ -9,13 +9,13 @@ const defaultEntityConfig: EntityConfig = {
   debug: Boolean(process.env.DEBUG) || false,
 };
 
-export class Entity<Props extends EntityProps> implements EntityPort<Props> {
-  readonly #props: Props;
+export class Entity<T> implements EntityPort<EntityProps<T>> {
+  readonly #props: EntityProps<T>;
   readonly #config: EntityConfig;
 
-  constructor(props: EntityProps, config?: EntityConfig) {
+  constructor(props: EntityProps<T>, config?: EntityConfig) {
     let { id, ...rest } = props;
-    id = id || UniqueEntityID.create();
+    id = id || UniqueEntityID.create().toString();
     this.#props = { ...rest, id } as any;
     this.#config = config || defaultEntityConfig;
   }
@@ -24,7 +24,7 @@ export class Entity<Props extends EntityProps> implements EntityPort<Props> {
     return entity instanceof Entity;
   }
 
-  public static create(props: EntityProps, config?: EntityConfig): IResult<any, any, any>;
+  public static create<T>(props: EntityProps<T>, config?: EntityConfig): IResult<any, any, any>;
   /**
    *
    * @param props params as Props
@@ -32,7 +32,10 @@ export class Entity<Props extends EntityProps> implements EntityPort<Props> {
    * @returns instance of result with a new Entity on state if success.
    * @summary result state will be `null` case failure.
    */
-  public static create(props: EntityProps, config?: EntityConfig): Result<any, any, any> {
+  public static create<T>(
+    props: EntityProps<T>,
+    config?: EntityConfig,
+  ): Result<Entity<T>, any, any> {
     const entity = new Entity(props, config);
     return Result.Ok(entity);
   }
@@ -51,7 +54,7 @@ export class Entity<Props extends EntityProps> implements EntityPort<Props> {
    * @param props as optional Entity Props.
    * @returns new Entity instance.
    */
-  clone(props?: Partial<Props>): this {
+  clone(props?: Partial<EntityProps<T>>): this {
     const _props = props ? { ...this.#props, ...props } : this.#props;
     const instance = Reflect.getPrototypeOf(this);
     invariant(instance, "Cannot get prototype of this entity instance");
@@ -64,18 +67,18 @@ export class Entity<Props extends EntityProps> implements EntityPort<Props> {
    * contains to a plain object with primitive types. Can be
    * useful when logging an entity during testing/debugging
    */
-  toObject(): Records {
+  toObject() {
     const clone = this.#convertPropsToObject(this.#props);
-    const result = {
+    const result: MarkRequired<EntityProps<T>, "createdAt" | "updatedAt" | "id"> = {
       id: this.#props.id?.toString(),
-      createdAt: this.#props.createdAt,
-      updatedAt: this.#props.updatedAt,
+      createdAt: this.#props.createdAt || new Date().toISOString(),
+      updatedAt: this.#props.updatedAt || new Date().toISOString(),
       ...clone,
     };
     return Object.freeze(result);
   }
 
-  #convertPropsToObject(props: Props) {
+  #convertPropsToObject(props: EntityProps<T>) {
     const propsCopy = structuredClone(props) as any;
     for (const prop in propsCopy) {
       const item = propsCopy[prop];

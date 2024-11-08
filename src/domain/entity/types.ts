@@ -1,13 +1,13 @@
 import type { EntityId, Records } from "@techmely/types";
 import type { UniqueEntityID } from "./unique-entity";
 
-export interface BaseEntityProps {
+export type BaseEntityProps = {
   id: UniqueEntityID | EntityId;
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface EntityProps extends Partial<BaseEntityProps>, Record<string, any> {}
+export type EntityProps<T> = Partial<BaseEntityProps> & T & Records;
 
 export type EntityConfig = {
   /** @description Enable debug mode for entity.
