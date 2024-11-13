@@ -31,7 +31,7 @@
     "upgrade.deps": "npm-check-updates --dep dev,prod,peer -u"
   },
   "dependencies": {
-    "@techmely/utils": "^3.3.0",
+    "@techmely/es-toolkit": "^1.2.1",
     "base-x": "^5.0.0",
     "emittery": "^1.0.3"
   },
@@ -64,5 +64,8 @@
       "url": "https://www.patreon.com/harrytran998"
     }
   ],
-  "keywords": ["techmely", "domain driven design"]
+  "keywords": [
+    "techmely",
+    "domain driven design"
+  ]
 }

@@ -2,9 +2,9 @@ import type { Entity } from "../domain";
 import type { EntityProps } from "../domain/entity/types";
 
 export interface DomainMapper<
-  Props extends EntityProps,
+  Props extends EntityProps<any>,
   DbRecord,
-  DomainEntity extends Entity<Props>,
+  DomainEntity extends Entity<Props>
   // Response = unknown,
 > {
   toPersistence(entity: DomainEntity): DbRecord;

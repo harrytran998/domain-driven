@@ -1,7 +1,6 @@
-import { invariant } from "@techmely/utils";
+import { invariant } from "@techmely/es-toolkit";
 import Emittery from "emittery";
 import { Result } from "../../utils";
-import type { IResult } from "../../utils/result/types";
 import { createEventContext } from "../context";
 import type { ContextEventName, EventContextManager } from "../context/types";
 import { Entity } from "../entity";
@@ -20,7 +19,10 @@ import type {
   DomainEventMetrics,
 } from "./types";
 
-export class Aggregate<T> extends Entity<EntityProps<T>> implements AggregatePort<EntityProps<T>> {
+export class Aggregate<T>
+  extends Entity<EntityProps<T>>
+  implements AggregatePort<EntityProps<T>>
+{
   readonly #domainEvents: DomainEvents<this>;
   #dispatchEventsCount: number;
   readonly #aggregateConfig: AggregateConfig;
@@ -29,7 +31,7 @@ export class Aggregate<T> extends Entity<EntityProps<T>> implements AggregatePor
   constructor(
     props: EntityProps<T>,
     config?: AggregateConfig,
-    events?: DomainEvents<Aggregate<T>>,
+    events?: DomainEvents<Aggregate<T>>
   ) {
     super(props, config);
     this.#props = props;
@@ -48,7 +50,7 @@ export class Aggregate<T> extends Entity<EntityProps<T>> implements AggregatePor
    */
   static override create<T>(
     props: Partial<EntityProps<T>>,
-    config?: AggregateConfig,
+    config?: AggregateConfig
   ): Result<Aggregate<T>, any, any> {
     return Result.Ok(new Aggregate(props, config));
   }
@@ -62,7 +64,8 @@ export class Aggregate<T> extends Entity<EntityProps<T>> implements AggregatePor
   get eventMetrics(): DomainEventMetrics {
     return {
       current: this.#domainEvents.metrics.totalEvents(),
-      total: this.#domainEvents.metrics.totalEvents() + this.#dispatchEventsCount,
+      total:
+        this.#domainEvents.metrics.totalEvents() + this.#dispatchEventsCount,
       dispatch: this.#dispatchEventsCount,
     };
   }
@@ -72,10 +75,14 @@ export class Aggregate<T> extends Entity<EntityProps<T>> implements AggregatePor
    */
   override hashCode(): UniqueEntityID {
     const instance = Reflect.getPrototypeOf(this);
-    return new UniqueEntityID(`[Aggregate@${instance?.constructor.name}]:${this.#props.id}`);
+    return new UniqueEntityID(
+      `[Aggregate@${instance?.constructor.name}]:${this.#props.id}`
+    );
   }
 
-  override clone(props?: Partial<EntityProps<T>> & { copyEvents?: boolean }): this {
+  override clone(
+    props?: Partial<EntityProps<T>> & { copyEvents?: boolean }
+  ): this {
     const _props = props ? { ...this.#props, ...props } : this.#props;
     const events = props && !!props.copyEvents ? this.#domainEvents : null;
     const instance = Reflect.getPrototypeOf(this);
@@ -103,7 +110,9 @@ export class Aggregate<T> extends Entity<EntityProps<T>> implements AggregatePor
     this.#dispatchEventsCount += totalEvents;
   }
 
-  clearEvents(config: AggregateClearEventsConfig = { resetMetrics: false }): void {
+  clearEvents(
+    config: AggregateClearEventsConfig = { resetMetrics: false }
+  ): void {
     if (config.resetMetrics) this.#dispatchEventsCount = 0;
     this.#domainEvents.clear();
   }
@@ -112,23 +121,25 @@ export class Aggregate<T> extends Entity<EntityProps<T>> implements AggregatePor
   addEvent(
     name: string,
     handler: DomainEventHandler<this>,
-    options?: DomainEventOptions | undefined,
+    options?: DomainEventOptions | undefined
   ): void;
   addEvent(
     nameOrEvent: string | AggregateEventHandler<this>,
     handler: DomainEventHandler<this>,
-    options?: DomainEventOptions | undefined,
+    options?: DomainEventOptions | undefined
   ): void;
   addEvent(
     nameOrEvent: unknown,
     handler?: DomainEventHandler<this>,
-    options?: DomainEventOptions,
+    options?: DomainEventOptions
   ): void {
     if (typeof nameOrEvent === "string" && handler) {
       this.#domainEvents.add(nameOrEvent as ContextEventName, handler, options);
     }
-    const _options = (nameOrEvent as AggregateEventHandler<this>)?.params?.options;
-    const eventName = (nameOrEvent as AggregateEventHandler<this>)?.params?.name;
+    const _options = (nameOrEvent as AggregateEventHandler<this>)?.params
+      ?.options;
+    const eventName = (nameOrEvent as AggregateEventHandler<this>)?.params
+      ?.name;
     const eventHandler = (nameOrEvent as AggregateEventHandler<this>)?.dispatch;
     this.#domainEvents.add(eventName, eventHandler, _options);
   }

@@ -1,5 +1,5 @@
 import type { MarkRequired } from "@techmely/types";
-import { invariant } from "@techmely/utils";
+import { invariant } from "@techmely/es-toolkit";
 import { Result } from "../../utils";
 import type { IResult } from "../../utils/result/types";
 import type { EntityConfig, EntityPort, EntityProps } from "./types";
@@ -24,7 +24,10 @@ export class Entity<T> implements EntityPort<EntityProps<T>> {
     return entity instanceof Entity;
   }
 
-  public static create<T>(props: EntityProps<T>, config?: EntityConfig): IResult<any, any, any>;
+  public static create<T>(
+    props: EntityProps<T>,
+    config?: EntityConfig
+  ): IResult<any, any, any>;
   /**
    *
    * @param props params as Props
@@ -34,7 +37,7 @@ export class Entity<T> implements EntityPort<EntityProps<T>> {
    */
   public static create<T>(
     props: EntityProps<T>,
-    config?: EntityConfig,
+    config?: EntityConfig
   ): Result<Entity<T>, any, any> {
     const entity = new Entity(props, config);
     return Result.Ok(entity);
@@ -45,7 +48,9 @@ export class Entity<T> implements EntityPort<EntityProps<T>> {
    */
   hashCode(): UniqueEntityID {
     const instance = Reflect.getPrototypeOf(this);
-    return new UniqueEntityID(`[Entity@${instance?.constructor?.name}]:${this.#props.id}`);
+    return new UniqueEntityID(
+      `[Entity@${instance?.constructor?.name}]:${this.#props.id}`
+    );
   }
 
   /**
@@ -58,7 +63,10 @@ export class Entity<T> implements EntityPort<EntityProps<T>> {
     const _props = props ? { ...this.#props, ...props } : this.#props;
     const instance = Reflect.getPrototypeOf(this);
     invariant(instance, "Cannot get prototype of this entity instance");
-    const entity = Reflect.construct(instance.constructor, [_props, this.#config]);
+    const entity = Reflect.construct(instance.constructor, [
+      _props,
+      this.#config,
+    ]);
     return entity;
   }
 
@@ -69,7 +77,10 @@ export class Entity<T> implements EntityPort<EntityProps<T>> {
    */
   toObject() {
     const clone = this.#convertPropsToObject(this.#props);
-    const result: MarkRequired<EntityProps<T>, "createdAt" | "updatedAt" | "id"> = {
+    const result: MarkRequired<
+      EntityProps<T>,
+      "createdAt" | "updatedAt" | "id"
+    > = {
       id: this.#props.id?.toString(),
       createdAt: this.#props.createdAt || new Date().toISOString(),
       updatedAt: this.#props.updatedAt || new Date().toISOString(),
