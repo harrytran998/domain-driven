@@ -1,5 +1,11 @@
 # @techmely/domain-driven
 
+## 2.2.0
+
+### Minor Changes
+
+- Move techmely utils to es-toolkit
+
 ## 2.1.0
 
 ### Minor Changes
