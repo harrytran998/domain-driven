@@ -1,5 +1,11 @@
 # @techmely/domain-driven
 
+## 2.3.0
+
+### Minor Changes
+
+- Update the estoolkit
+
 ## 2.2.0
 
 ### Minor Changes

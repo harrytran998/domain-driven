@@ -1,6 +1,6 @@
 {
   "name": "@techmely/domain-driven",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Techmely Domain Driven",
   "author": "Harry Tran <nhattq.coding@gmail.com>",
   "license": "MIT",
@@ -31,28 +31,27 @@
     "upgrade.deps": "npm-check-updates --dep dev,prod,peer -u"
   },
   "dependencies": {
-    "@techmely/es-toolkit": "^1.2.1",
-    "base-x": "^5.0.0",
-    "emittery": "^1.0.3"
+    "@techmely/es-toolkit": "^1.6.0",
+    "emittery": "^1.1.0"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@changesets/changelog-github": "0.5.0",
-    "@changesets/cli": "2.27.9",
+    "@changesets/cli": "2.27.12",
     "@techmely/http": "1.2.12",
     "@techmely/types": "1.9.0",
-    "@types/bun": "1.1.13",
-    "@types/node": "22.9.0",
-    "@vitest/coverage-v8": "2.1.4",
+    "@types/bun": "1.2.2",
+    "@types/node": "22.13.4",
+    "@vitest/coverage-v8": "3.0.5",
     "cross-env": "7.0.3",
-    "happy-dom": "15.11.0",
-    "husky": "9.1.6",
-    "npm-check-updates": "^17.1.10",
+    "happy-dom": "17.1.0",
+    "husky": "9.1.7",
+    "npm-check-updates": "^17.1.14",
     "tslib": "2.8.1",
-    "typescript": "5.6.3",
-    "vite": "^5.4.10",
-    "vitest": "2.1.4",
-    "zx": "8.2.0"
+    "typescript": "5.7.3",
+    "vite": "^6.1.0",
+    "vitest": "3.0.5",
+    "zx": "8.3.2"
   },
   "funding": [
     {

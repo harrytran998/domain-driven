@@ -1,5 +1,5 @@
+import { generatePrefixId } from "@techmely/es-toolkit/generate";
 import type { EntityId } from "@techmely/types";
-import { generatePrefixId } from "@techmely/es-toolkit/generate/id";
 
 export class UniqueEntityID {
   protected readonly id: EntityId;
