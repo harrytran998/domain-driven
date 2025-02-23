@@ -1,106 +1,90 @@
-import type { MarkRequired } from "@techmely/types";
-import { invariant } from "@techmely/es-toolkit";
-import { Result } from "../../utils";
-import type { IResult } from "../../utils/result/types";
-import type { EntityConfig, EntityPort, EntityProps } from "./types";
-import { UniqueEntityID } from "./unique-entity";
+import { envShims } from "@techmely/es-toolkit"
+import type { MarkRequired } from "@techmely/types"
+import { Result } from "../../utils"
+import type { IResult } from "../../utils/result/types"
+import type { EntityConfig, EntityProps } from "./types"
+import { UniqueEntityID } from "./unique-entity"
 
 const defaultEntityConfig: EntityConfig = {
-  debug: Boolean(process.env.DEBUG) || false,
-};
+  debug: Boolean(envShims().DEBUG) || false,
+}
 
-export class Entity<T> implements EntityPort<EntityProps<T>> {
-  readonly #props: EntityProps<T>;
-  readonly #config: EntityConfig;
+export type Entity<T> = {
+  props: EntityProps<T>
+  config: EntityConfig
+}
 
-  constructor(props: EntityProps<T>, config?: EntityConfig) {
-    let { id, ...rest } = props;
-    id = id || UniqueEntityID.create().toString();
-    this.#props = { ...rest, id } as any;
-    this.#config = config || defaultEntityConfig;
-  }
+// Helper functions
+const convertPropsToObject = <T>(props: EntityProps<T>) => {
+  const propsCopy = structuredClone(props) as any
 
-  static isEntity(entity: unknown): entity is Entity<any> {
-    return entity instanceof Entity;
-  }
-
-  public static create<T>(
-    props: EntityProps<T>,
-    config?: EntityConfig
-  ): IResult<any, any, any>;
-  /**
-   *
-   * @param props params as Props
-   * @param id optional uuid as string in props. If not provided on props a new one will be generated.
-   * @returns instance of result with a new Entity on state if success.
-   * @summary result state will be `null` case failure.
-   */
-  public static create<T>(
-    props: EntityProps<T>,
-    config?: EntityConfig
-  ): Result<Entity<T>, any, any> {
-    const entity = new Entity(props, config);
-    return Result.Ok(entity);
-  }
-
-  /**
-   * @description Get hash to identify the entity.
-   */
-  hashCode(): UniqueEntityID {
-    const instance = Reflect.getPrototypeOf(this);
-    return new UniqueEntityID(
-      `[Entity@${instance?.constructor?.name}]:${this.#props.id}`
-    );
-  }
-
-  /**
-   * @description Get a new instanced based on current Entity.
-   * @summary if not provide an id a new one will be generated.
-   * @param props as optional Entity Props.
-   * @returns new Entity instance.
-   */
-  clone(props?: Partial<EntityProps<T>>): this {
-    const _props = props ? { ...this.#props, ...props } : this.#props;
-    const instance = Reflect.getPrototypeOf(this);
-    invariant(instance, "Cannot get prototype of this entity instance");
-    const entity = Reflect.construct(instance.constructor, [
-      _props,
-      this.#config,
-    ]);
-    return entity;
-  }
-
-  /**
-   * Convert an Entity and all sub-entities/Value Objects it
-   * contains to a plain object with primitive types. Can be
-   * useful when logging an entity during testing/debugging
-   */
-  toObject() {
-    const clone = this.#convertPropsToObject(this.#props);
-    const result: MarkRequired<
-      EntityProps<T>,
-      "createdAt" | "updatedAt" | "id"
-    > = {
-      id: this.#props.id?.toString(),
-      createdAt: this.#props.createdAt || new Date().toISOString(),
-      updatedAt: this.#props.updatedAt || new Date().toISOString(),
-      ...clone,
-    };
-    return Object.freeze(result);
-  }
-
-  #convertPropsToObject(props: EntityProps<T>) {
-    const propsCopy = structuredClone(props) as any;
-    for (const prop in propsCopy) {
-      const item = propsCopy[prop];
-      if (Array.isArray(item)) {
-        propsCopy[prop] = item.map((i) => {
-          return Entity.isEntity(i) ? i.toObject() : i;
-        });
-      }
-      propsCopy[prop] = Entity.isEntity(item) ? item.toObject() : item;
+  for (const prop in propsCopy) {
+    const item = propsCopy[prop]
+    if (Array.isArray(item)) {
+      propsCopy[prop] = item.map(i => {
+        return isEntity(i) ? toObject(i) : i
+      })
     }
-
-    return propsCopy;
+    propsCopy[prop] = isEntity(item) ? toObject(item) : item
   }
+
+  return propsCopy
+}
+
+// Main entity functions
+export const createEntity = <T>(
+  props: EntityProps<T>,
+  config: EntityConfig = defaultEntityConfig,
+): IResult<Entity<T>, any, any> => {
+  const { id, ...rest } = props
+  const entityId = id || UniqueEntityID.toString()
+
+  const entity: Entity<T> = {
+    props: { ...rest, id: entityId } as any,
+    config,
+  }
+
+  return Result.Ok(entity)
+}
+
+export const isEntity = (entity: unknown): entity is Entity<any> => {
+  return entity !== null && typeof entity === "object" && "props" in entity && "config" in entity
+}
+
+export const hashCode = <T>(entity: Entity<T>): string => {
+  return `[Entity]:${entity.props.id}`
+}
+
+export const cloneEntity = <T>(
+  entity: Entity<T>,
+  newProps?: Partial<EntityProps<T>>,
+): Entity<T> => {
+  const updatedProps = newProps ? { ...entity.props, ...newProps } : entity.props
+
+  return {
+    props: updatedProps,
+    config: entity.config,
+  }
+}
+
+export const toObject = <T>(entity: Entity<T>) => {
+  const clone = convertPropsToObject(entity.props)
+
+  const result: MarkRequired<EntityProps<T>, "createdAt" | "updatedAt" | "id"> = {
+    id: entity.props.id?.toString(),
+    createdAt: entity.props.createdAt || new Date().toISOString(),
+    updatedAt: entity.props.updatedAt || new Date().toISOString(),
+    ...clone,
+  }
+
+  return Object.freeze(result)
+}
+
+// Optional: Create a convenience function to handle all entity operations
+export const entityFactory = {
+  create: createEntity,
+  isEntity,
+  hashCode,
+  clone: cloneEntity,
+  toObject,
 }

@@ -1,44 +1,57 @@
-import type Emittery from "emittery";
-import type { ContextEventName, EventContextManager } from "../context/types";
-import type { EntityConfig } from "../entity/types";
-import type { UniqueEntityID } from "../entity/unique-entity";
-import type {
-  AggregateEventHandler,
-  DomainEventHandler,
-  DomainEventOptions,
-} from "../events/types";
+import type Emittery from "emittery"
+import type { ContextEventName, EventContextManager } from "../context/types"
+import type { UniqueEntityID } from "../entity"
+import type { EntityConfig, EntityProps } from "../entity/types"
+import type { DomainEventHandler, DomainEventOptions } from "../events/types"
 
-export type AggregateConfig = {
-  emitter: Emittery;
-} & EntityConfig;
-
-export type AggregateClearEventsConfig = {
-  resetMetrics: boolean;
-};
-
-export interface AggregatePort<T> {
-  hashCode(): UniqueEntityID;
-  context(): EventContextManager;
-  clone(props?: unknown): this;
-  dispatchEvent(name: ContextEventName, ...args: unknown[]): void;
-  dispatchAll(): Promise<void>;
-  clearEvents(config: AggregateClearEventsConfig): void;
-  addEvent(event: DomainEventHandler<this>): void;
-  addEvent(
-    name: ContextEventName,
-    handler: DomainEventHandler<this>,
-    options?: DomainEventOptions,
-  ): void;
-  addEvent(
-    nameOrEvent: ContextEventName | AggregateEventHandler<this>,
-    handler: DomainEventHandler<this>,
-    options?: DomainEventOptions,
-  ): void;
-  removeEvent(name: ContextEventName): number;
+export interface AggregateConfig extends EntityConfig {
+  emitter: Emittery
+  resetMetrics?: boolean
 }
 
-export interface DomainEventMetrics {
-  current: number;
-  total: number;
-  dispatch: number;
+export type AggregateUpdate<T> = (
+  state: AggregateState<T>,
+  eventHandlers: AggregateEventHandlers<T>,
+) => AggregateState<T> | Promise<AggregateState<T>>
+
+export interface AggregateState<T> {
+  props: EntityProps<T>
+  domainEvents: DomainEventsState
+  dispatchEventsCount: number
+  config: AggregateConfig
+  typeName: string
+}
+
+export interface DomainEventsState {
+  handlers: Record<
+    string,
+    {
+      handler: DomainEventHandler<any>
+      options?: DomainEventOptions
+    }[]
+  >
+  emitted: unknown[]
+}
+
+export interface AggregateEventHandlers<T> {
+  addEvent: (
+    state: AggregateState<T>,
+    nameOrHandler: ContextEventName | DomainEventHandler<T>,
+    handler?: DomainEventHandler<T>,
+    options?: DomainEventOptions,
+  ) => AggregateState<T>
+  removeEvent: (state: AggregateState<T>, name: ContextEventName) => AggregateState<T>
+  dispatchEvent: (
+    state: AggregateState<T>,
+    name: ContextEventName,
+    ...args: unknown[]
+  ) => Promise<AggregateState<T>>
+  clearEvents: (state: AggregateState<T>) => AggregateState<T>
+}
+
+export interface AggregateFactory<T> {
+  getState: () => Readonly<AggregateState<T>>
+  getContext: () => EventContextManager
+  update: (fn: AggregateUpdate<T>) => Promise<AggregateFactory<T>>
+  hashCode: () => UniqueEntityID
 }

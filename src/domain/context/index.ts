@@ -1,16 +1,16 @@
-import type EventEmitter from "emittery";
-import { BrowserEventManager } from "./browser.event";
-import { ServerEventManager } from "./server.event";
-import type { EventContextManager } from "./types";
+import type EventEmitter from "emittery"
+import { createBrowserEventManager } from "./browser.event"
+import { createServerEventManager } from "./server.event"
+import type { EventContextManager } from "./types"
 
-let eventContextManager: EventContextManager;
+let eventContextManager: EventContextManager
 
 export function createEventContext(emitter: EventEmitter): EventContextManager {
-  if (eventContextManager) return eventContextManager;
+  if (eventContextManager) return eventContextManager
   if (typeof window !== "undefined") {
-    eventContextManager = BrowserEventManager.instance(globalThis.window);
+    eventContextManager = createBrowserEventManager(globalThis.window)
   } else {
-    eventContextManager = ServerEventManager.instance(emitter);
+    eventContextManager = createServerEventManager(emitter)
   }
-  return eventContextManager;
+  return eventContextManager
 }

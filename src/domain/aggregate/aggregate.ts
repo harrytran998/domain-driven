@@ -1,151 +1,136 @@
-import { invariant } from "@techmely/es-toolkit";
-import Emittery from "emittery";
-import { Result } from "../../utils";
-import { createEventContext } from "../context";
-import type { ContextEventName, EventContextManager } from "../context/types";
-import { Entity } from "../entity";
-import { UniqueEntityID } from "../entity";
-import type { EntityProps } from "../entity/types";
-import { DomainEvents } from "../events";
+import Emittery from "emittery"
+import { createEventContext } from "../context"
+import { UniqueEntityID } from "../entity"
+import type { EntityProps } from "../entity/types"
 import type {
-  AggregateEventHandler,
-  DomainEventHandler,
-  DomainEventOptions,
-} from "../events/types";
-import type {
-  AggregateClearEventsConfig,
   AggregateConfig,
-  AggregatePort,
-  DomainEventMetrics,
-} from "./types";
+  AggregateEventHandlers,
+  AggregateFactory,
+  AggregateState,
+  DomainEventsState,
+} from "./types"
 
-export class Aggregate<T>
-  extends Entity<EntityProps<T>>
-  implements AggregatePort<EntityProps<T>>
-{
-  readonly #domainEvents: DomainEvents<this>;
-  #dispatchEventsCount: number;
-  readonly #aggregateConfig: AggregateConfig;
-  readonly #props: EntityProps<T>;
+const initializeDomainEvents = (): DomainEventsState => ({
+  handlers: {},
+  emitted: [],
+})
 
-  constructor(
-    props: EntityProps<T>,
-    config?: AggregateConfig,
-    events?: DomainEvents<Aggregate<T>>
-  ) {
-    super(props, config);
-    this.#props = props;
-    this.#dispatchEventsCount = 0;
-    this.#aggregateConfig = config ?? { emitter: new Emittery(), debug: false };
-    this.#domainEvents = new DomainEvents(this);
-    if (events) this.#domainEvents = events as unknown as DomainEvents<this>;
-  }
+function eventHandlers<T>(): AggregateEventHandlers<T> {
+  return {
+    addEvent: (current, nameOrHandler, handler, options) => {
+      const newHandlers = { ...current.domainEvents.handlers }
 
-  /**
-   *
-   * @param props params as Props
-   * @param id optional uuid as string, second arg. If not provided a new one will be generated.
-   * @returns instance of result with a new Aggregate on state if success.
-   * @summary result state will be `null` case failure.
-   */
-  static override create<T>(
-    props: Partial<EntityProps<T>>,
-    config?: AggregateConfig
-  ): Result<Aggregate<T>, any, any> {
-    return Result.Ok(new Aggregate(props, config));
-  }
+      if (typeof nameOrHandler === "string" && handler) {
+        newHandlers[nameOrHandler] = [...(newHandlers[nameOrHandler] || []), { handler, options }]
+      } else if (typeof nameOrHandler === "function") {
+        const eventName = (nameOrHandler as any).params?.name
+        const eventHandler = (nameOrHandler as any).dispatch
+        const eventOptions = (nameOrHandler as any).params?.options
 
-  /**
-   * @description Get aggregate metrics
-   * @access current events as number representing total of events in state for aggregate
-   * @access total as number representing total events for aggregate including dispatched
-   * @access dispatch total of events already dispatched
-   */
-  get eventMetrics(): DomainEventMetrics {
-    return {
-      current: this.#domainEvents.metrics.totalEvents(),
-      total:
-        this.#domainEvents.metrics.totalEvents() + this.#dispatchEventsCount,
-      dispatch: this.#dispatchEventsCount,
-    };
-  }
+        if (eventName && eventHandler) {
+          newHandlers[eventName] = [
+            ...(newHandlers[eventName] || []),
+            { handler: eventHandler, options: eventOptions },
+          ]
+        }
+      }
 
-  /**
-   * @description Get hash to identify the aggregate.
-   */
-  override hashCode(): UniqueEntityID {
-    const instance = Reflect.getPrototypeOf(this);
-    return new UniqueEntityID(
-      `[Aggregate@${instance?.constructor.name}]:${this.#props.id}`
-    );
-  }
+      return {
+        ...current,
+        domainEvents: {
+          ...current.domainEvents,
+          handlers: newHandlers,
+        },
+      }
+    },
 
-  override clone(
-    props?: Partial<EntityProps<T>> & { copyEvents?: boolean }
-  ): this {
-    const _props = props ? { ...this.#props, ...props } : this.#props;
-    const events = props && !!props.copyEvents ? this.#domainEvents : null;
-    const instance = Reflect.getPrototypeOf(this);
-    invariant(instance, "Cannot get prototype of this entity instance");
-    const aggregate = Reflect.construct(instance.constructor, [
-      _props,
-      this.#aggregateConfig,
-      events,
-    ]);
-    return aggregate;
-  }
+    removeEvent: (current, name) => {
+      const { [name]: _, ...remainingHandlers } = current.domainEvents.handlers
+      return {
+        ...current,
+        domainEvents: {
+          ...current.domainEvents,
+          handlers: remainingHandlers,
+        },
+      }
+    },
 
-  context(): EventContextManager {
-    return createEventContext(this.#aggregateConfig.emitter);
-  }
+    dispatchEvent: async (current, name, ...args) => {
+      const handlers = current.domainEvents.handlers[name] || []
+      const newEmitted = [...current.domainEvents.emitted, ...args]
 
-  dispatchEvent(name: ContextEventName, ...args: unknown[]): void {
-    this.#domainEvents.dispatch(name, args);
-    this.#dispatchEventsCount++;
-  }
+      // Execute handlers asynchronously
+      await Promise.all(
+        handlers.map(async ({ handler }) => {
+          try {
+            // @ts-expect-error Ignore type error for now
+            await handler(...args)
+          } catch (error) {
+            if (current.config.debug) {
+              console.error(`Error handling event ${name}:`, error)
+            }
+          }
+        }),
+      )
 
-  async dispatchAll(): Promise<void> {
-    const totalEvents = this.#domainEvents.metrics.totalEvents();
-    await this.#domainEvents.dispatchEvents();
-    this.#dispatchEventsCount += totalEvents;
-  }
-
-  clearEvents(
-    config: AggregateClearEventsConfig = { resetMetrics: false }
-  ): void {
-    if (config.resetMetrics) this.#dispatchEventsCount = 0;
-    this.#domainEvents.clear();
-  }
-
-  addEvent(event: DomainEventHandler<this>): void;
-  addEvent(
-    name: string,
-    handler: DomainEventHandler<this>,
-    options?: DomainEventOptions | undefined
-  ): void;
-  addEvent(
-    nameOrEvent: string | AggregateEventHandler<this>,
-    handler: DomainEventHandler<this>,
-    options?: DomainEventOptions | undefined
-  ): void;
-  addEvent(
-    nameOrEvent: unknown,
-    handler?: DomainEventHandler<this>,
-    options?: DomainEventOptions
-  ): void {
-    if (typeof nameOrEvent === "string" && handler) {
-      this.#domainEvents.add(nameOrEvent as ContextEventName, handler, options);
-    }
-    const _options = (nameOrEvent as AggregateEventHandler<this>)?.params
-      ?.options;
-    const eventName = (nameOrEvent as AggregateEventHandler<this>)?.params
-      ?.name;
-    const eventHandler = (nameOrEvent as AggregateEventHandler<this>)?.dispatch;
-    this.#domainEvents.add(eventName, eventHandler, _options);
-  }
-  removeEvent(name: ContextEventName): number {
-    const totalEvents = this.#domainEvents.metrics.totalEvents();
-    this.#domainEvents.remove(name);
-    return totalEvents - this.#domainEvents.metrics.totalEvents();
+      return {
+        ...current,
+        domainEvents: {
+          ...current.domainEvents,
+          emitted: newEmitted,
+        },
+        dispatchEventsCount: current.dispatchEventsCount + 1,
+      }
+    },
+    clearEvents(current) {
+      return {
+        ...current,
+        dispatchEventsCount: current.config.resetMetrics ? 0 : current.dispatchEventsCount,
+        domainEvents: initializeDomainEvents(),
+      }
+    },
   }
 }
+
+export const Aggregate = <T>(
+  typeName: string,
+  initialProps: Partial<EntityProps<T>> = {},
+  config: AggregateConfig = { emitter: new Emittery(), debug: false },
+): AggregateFactory<T> => {
+  let state: AggregateState<T> = {
+    typeName,
+    props: {
+      id: UniqueEntityID(initialProps?.id).toString(),
+      ...initialProps,
+    } as EntityProps<T>,
+    domainEvents: initializeDomainEvents(),
+    dispatchEventsCount: 0,
+    config,
+  }
+
+  const context = createEventContext(config.emitter)
+
+  const aggregate: AggregateFactory<T> = {
+    getState: () => ({ ...state }),
+    getContext: () => context,
+
+    update: async fn => {
+      const newState = await fn({ ...state }, eventHandlers<T>())
+      state = newState
+      return aggregate
+    },
+
+    hashCode: () => UniqueEntityID(`[Aggregate@${typeName}]:${state.props.id}`),
+  }
+
+  return aggregate
+}
+
+export const cloneAggregate = <T>(
+  original: AggregateState<T>,
+  props?: Partial<EntityProps<T>> & { copyEvents?: boolean },
+): AggregateState<T> => ({
+  ...original,
+  props: { ...original.props, ...props },
+  domainEvents: props?.copyEvents ? original.domainEvents : initializeDomainEvents(),
+})
